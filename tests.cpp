@@ -1,20 +1,16 @@
 /**
 	\file tests.cpp
-	\brief Catch.hpp tests for IntElement, VariableElement, ConcreteSquareMatrix and SymbolicSquareMatrix classes
+	\brief Tests for all classes
 */
-
-#define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 #include "element.h"
-#include "varelement.h"
-#include "intelement.h"
-#include "concretematrix.h"
-#include "symbolicmatrix.h"
-#include "valuation.h"
-#include <sstream>
+#include "compositeelement.h"
+#include "elementarymatrix.h"
 #include <algorithm>
 #include <stdexcept>
 #include <vector>
+#include <sstream>
+
 
 TEST_CASE("IntElement tests", "intelement"){
 	IntElement firstobj;
@@ -42,13 +38,12 @@ TEST_CASE("IntElement tests", "intelement"){
 	out << firstobj;
 	CHECK(out.str()=="15");
 	secondobj.setVal(15);
-	CHECK(firstobj==secondobj);
-	
+	CHECK(firstobj==secondobj);	
 }
 
-TEST_CASE("VarElement tests", "varelement"){
+TEST_CASE("VariableElement tests", "varelement"){
 	VariableElement firstobj;
-	CHECK(firstobj.getVal()=='0');
+	CHECK(firstobj.getVal()==0);
 	VariableElement secondobj('f');
 	CHECK(secondobj.getVal()=='f');
 	firstobj.setVal('k');
@@ -67,6 +62,21 @@ TEST_CASE("VarElement tests", "varelement"){
 	CHECK(valu.at('b') == -123);
 	CHECK_THROWS(firstobj.evaluate(valu));
 }
+
+TEST_CASE("CompositeElement tests", "compositeelement"){
+	IntElement firstobj(5);
+	VariableElement secondobj('f');
+
+	CompositeElement first(firstobj, secondobj, std::plus<int>(), '+');
+	CHECK(first.toString() == "(5+f)");
+
+	CompositeElement second(first);
+	CHECK(second == first);
+
+	CompositeElement third = first;
+	CHECK(third.toString() == first.toString());
+}
+
 
 
 TEST_CASE("ConcreteSquareMatrix correct tests", "concretematrix_correct"){
@@ -105,8 +115,7 @@ TEST_CASE("ConcreteSquareMatrix correct tests", "concretematrix_correct"){
 	CHECK(out.str() == "[[3,5,7][1,2,2][4,4,6]]");
 
 	mathMatrix.print(out);
-	CHECK(out.str() == "[[3,5,7][1,2,2][4,4,6]][[3,5,7][1,2,2][4,4,6]]");
-	
+	CHECK(out.str() == "[[3,5,7][1,2,2][4,4,6]][[3,5,7][1,2,2][4,4,6]]");	
 }
 
 TEST_CASE("ConcreteSquareMatrix incorrect tests and exceptions", "concretematrix_incorrect"){
@@ -173,6 +182,25 @@ TEST_CASE("SymbolicSquareMatrix correct tests", "Symbolicmatrix_correct"){
 
 	valu.erase('z');
 	CHECK_THROWS(evaluated = vtest.evaluate(valu));
+
+	valu['z'] = 4;
+	SymbolicSquareMatrix mathMatrix("[[x,5,7][1,y,2][z,4,6]]");
+	SymbolicSquareMatrix mathMatrixTwo("[[3,1,4][5,2,4][7,2,6]]");
+
+	SymbolicSquareMatrix addition = mathMatrix + mathMatrixTwo;
+	CHECK(addition.toString() == "[[(x+3),(5+1),(7+4)][(1+5),(y+2),(2+4)][(z+7),(4+2),(6+6)]]");
+	ConcreteSquareMatrix solvedAddition = addition.evaluate(valu);
+	CHECK(solvedAddition.toString() == "[[6,6,11][6,4,6][11,6,12]]");
+	
+	SymbolicSquareMatrix subtraction = mathMatrix - mathMatrixTwo;
+	CHECK(subtraction.toString() == "[[(x-3),(5-1),(7-4)][(1-5),(y-2),(2-4)][(z-7),(4-2),(6-6)]]");
+	ConcreteSquareMatrix solvedSubtraction = subtraction.evaluate(valu);
+	CHECK(solvedSubtraction.toString() == "[[0,4,3][-4,0,-2][-3,2,0]]");
+
+	SymbolicSquareMatrix multiplication = mathMatrix * mathMatrixTwo;
+	ConcreteSquareMatrix solvedMultiplication = multiplication.evaluate(valu);
+	CHECK(solvedMultiplication.toString() == "[[83,27,74][27,9,24][74,24,68]]");
+
 }
 
 TEST_CASE("SymbolicSquareMatrix incorrect tests and exceptions", "symbolicmatrix_incorrect"){
@@ -191,5 +219,4 @@ TEST_CASE("SymbolicSquareMatrix incorrect tests and exceptions", "symbolicmatrix
 	CHECK_THROWS(SymbolicSquareMatrix("F"));
 	CHECK_THROWS(SymbolicSquareMatrix("[F"));
 	CHECK_THROWS(SymbolicSquareMatrix("[[-3,14][24,5,5]"));
-
 }

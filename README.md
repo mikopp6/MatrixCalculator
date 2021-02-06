@@ -1,6 +1,6 @@
 # MatrixCalculator
-For UniOulu course. Work In Progress!
 
-Uploaded to pad content on my github page. Finished version will be uploaded here, ETA March 2020.
+Final version. Uploaded to pad content on my github page. 
+Usage instructions coming!
 
-Check comments on code for more info.
+catch.hpp is not made by me. Check start of that file for more info.
